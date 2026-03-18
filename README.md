@@ -6,7 +6,6 @@ A browser-based tool that maps sugar syrup temperature to confectionery
 boiling stage — including water activity, cold water test descriptions, 
 process parameters, and common defect analysis.
 
-Built from hands-on experience at Zubi Candy, Chennai.
 
 ### How to use
 Download sugar_boiling_calculator.html and open it in any browser. 
