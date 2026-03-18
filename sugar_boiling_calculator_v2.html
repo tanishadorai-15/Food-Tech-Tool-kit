@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sugar Boiling Stage Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#fdf8f0; --surface:#ffffff; --surface2:#f5ede0;
+  --border:#e8d9c4; --ink:#1c1510; --ink2:#5a4a38; --ink3:#9a8572;
+  --amber:#c8710a; --amber-lt:#f5a84a; --red:#c0392b; --green:#2e7d52;
+  --shadow:rgba(80,40,10,0.10);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+
+.page-header{background:var(--ink);color:var(--bg);padding:48px 32px 40px;text-align:center;position:relative;overflow:hidden;}
+.page-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--amber),var(--amber-lt),var(--amber));}
+.header-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:var(--amber-lt);margin-bottom:14px;}
+.header-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:400;line-height:1.15;margin-bottom:12px;}
+.header-title em{font-style:italic;color:var(--amber-lt);}
+.header-sub{font-size:13px;color:#b0a090;line-height:1.7;max-width:520px;margin:0 auto;}
+
+.main{max-width:900px;margin:0 auto;padding:40px 24px 80px;}
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 12px var(--shadow);margin-bottom:24px;overflow:hidden;}
+.card-body{padding:28px 32px;}
+
+.controls-row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px;}
+.control-group{display:flex;flex-direction:column;gap:8px;}
+.control-group label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink3);}
+
+.unit-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.unit-btn{background:transparent;border:none;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;padding:8px 20px;cursor:pointer;color:var(--ink3);transition:all 0.18s;}
+.unit-btn.active{background:var(--ink);color:var(--bg);}
+.unit-btn:hover:not(.active){background:var(--surface2);}
+
+.altitude-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:8px 14px;width:140px;color:var(--ink);outline:none;transition:border-color 0.18s;}
+.altitude-input:focus{border-color:var(--amber);}
+.altitude-note{font-size:11px;color:var(--ink3);margin-top:2px;}
+
+.temp-hero{display:flex;align-items:baseline;gap:10px;margin-bottom:20px;}
+#tempValue{font-family:'Playfair Display',serif;font-size:5.5rem;line-height:1;color:var(--amber);transition:color 0.3s;}
+.temp-unit-big{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--ink3);font-weight:400;}
+.temp-corrected{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);margin-left:4px;align-self:center;}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:var(--surface2);border-radius:3px;outline:none;cursor:pointer;margin-bottom:10px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--amber);border:3px solid white;box-shadow:0 2px 8px rgba(200,113,10,0.4);cursor:pointer;transition:box-shadow 0.2s;}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 2px 16px rgba(200,113,10,0.7);}
+.range-labels{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:20px;}
+.manual-row{display:flex;gap:12px;align-items:center;}
+.manual-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14px;padding:9px 14px;width:140px;color:var(--ink);outline:none;transition:border-color 0.18s;}
+.manual-input:focus{border-color:var(--amber);}
+.manual-hint{font-size:11px;color:var(--ink3);}
+
+.stage-strip{display:flex;border-radius:8px;overflow:hidden;height:10px;margin-bottom:14px;box-shadow:0 1px 4px var(--shadow);}
+.strip-seg{flex:1;opacity:0.3;transition:opacity 0.3s;}
+.strip-seg.active{opacity:1;}
+.stage-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+.stage-pill{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--ink3);cursor:default;transition:all 0.25s;}
+.stage-pill.active{color:white;border-color:transparent;box-shadow:0 2px 8px rgba(0,0,0,0.18);}
+
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+@media(max-width:600px){.metrics-row{grid-template-columns:1fr 1fr;}}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 16px;text-align:center;box-shadow:0 2px 8px var(--shadow);transition:border-color 0.3s;}
+.metric-card.highlight{border-color:var(--amber);}
+.metric-val{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--amber);line-height:1;margin-bottom:4px;}
+.metric-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);}
+
+.altitude-card{background:linear-gradient(135deg,#1c1510,#2e1f10);color:var(--bg);border-radius:10px;padding:24px 28px;margin-bottom:24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+.alt-icon{font-size:2.5rem;flex-shrink:0;}
+.alt-body{flex:1;min-width:220px;}
+.alt-body h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;color:var(--amber-lt);margin-bottom:6px;}
+.alt-body p{font-size:12px;color:#b0a090;line-height:1.7;}
+.alt-correction{font-family:'IBM Plex Mono',monospace;font-size:1.4rem;color:var(--amber-lt);font-weight:500;flex-shrink:0;}
+
+.result-header{padding:28px 32px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.stage-title{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--ink);}
+.stage-number{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;padding:7px 16px;border-radius:4px;border:1px solid;transition:all 0.3s;}
+.temp-range-tag{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3);margin-top:4px;}
+.safety-badge{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:5px 12px;border-radius:4px;margin-top:8px;}
+.safety-safe{background:#e8f5ee;color:var(--green);border:1px solid #a8d8bc;}
+.safety-warn{background:#fff8e8;color:#b07800;border:1px solid #f0d080;}
+.safety-danger{background:#fde8e8;color:var(--red);border:1px solid #f0a0a0;}
+
+.result-grid{padding:28px 32px;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:600px){.result-grid{grid-template-columns:1fr;}}
+.info-block .ibl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;display:block;}
+.info-block p{font-size:13px;color:var(--ink);line-height:1.7;}
+
+.full-block{grid-column:1/-1;background:var(--surface2);border-radius:8px;padding:20px 22px;}
+.full-block .ibl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:block;}
+.full-block p{font-size:13px;color:var(--ink);line-height:1.75;}
+
+.chem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;grid-column:1/-1;}
+.chem-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;}
+.chem-card .chem-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:6px;display:block;}
+.chem-card p{font-size:12px;color:var(--ink2);line-height:1.65;}
+
+.products-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+.product-tag{font-size:11px;padding:4px 11px;border-radius:3px;background:var(--surface);border:1px solid var(--border);color:var(--ink);}
+
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:600px){.tips-grid{grid-template-columns:1fr;}}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;box-shadow:0 2px 8px var(--shadow);transition:border-color 0.3s;}
+.tip-card:hover{border-color:var(--amber);}
+.tip-icon{font-size:1.4rem;margin-bottom:8px;}
+.tip-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--amber);margin-bottom:7px;}
+.tip-text{font-size:12px;color:var(--ink2);line-height:1.7;}
+
+.footer{text-align:center;font-size:11px;color:var(--ink3);line-height:1.9;padding-top:20px;border-top:1px solid var(--border);}
+.footer strong{color:var(--amber);}
+.placeholder{font-size:13px;color:var(--ink3);font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <p class="header-eyebrow">Food Technology · Confectionery Science</p>
+  <h1 class="header-title">Sugar Boiling<br><em>Stage Calculator</em></h1>
+  <p class="header-sub">Enter syrup temperature to identify boiling stage, chemistry, water activity, suitable confections, altitude correction & process notes.</p>
+</div>
+
+<div class="main">
+
+  <div class="card">
+    <div class="card-body">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Temperature Unit</label>
+          <div class="unit-toggle">
+            <button class="unit-btn active" id="btnC" onclick="setUnit('C')">°C</button>
+            <button class="unit-btn" id="btnF" onclick="setUnit('F')">°F</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Altitude (metres)</label>
+          <input type="number" class="altitude-input" id="altInput" placeholder="0" value="0" min="0" max="5000" oninput="onAltitude(this.value)">
+          <span class="altitude-note" id="altNote">Sea level — no correction needed</span>
+        </div>
+      </div>
+      <span class="sec-label">Syrup Temperature</span>
+      <div class="temp-hero">
+        <span id="tempValue">100</span>
+        <span class="temp-unit-big" id="unitLabel">°C</span>
+        <span class="temp-corrected" id="correctedLabel"></span>
+      </div>
+      <input type="range" id="tempSlider" min="100" max="185" value="100" step="1" oninput="onSlider(this.value)">
+      <div class="range-labels"><span id="rangeMin">100°C</span><span id="rangeMax">185°C</span></div>
+      <div class="manual-row">
+        <input type="number" class="manual-input" id="manualInput" placeholder="e.g. 120" oninput="onManual(this.value)">
+        <span class="manual-hint">Or type temperature directly</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-strip" id="stageStrip"></div>
+  <div class="stage-pills" id="stagePills"></div>
+
+  <div class="metrics-row">
+    <div class="metric-card" id="mc0"><div class="metric-val" id="mcStage">—</div><div class="metric-lbl">Stage</div></div>
+    <div class="metric-card" id="mc1"><div class="metric-val" id="mcAw">—</div><div class="metric-lbl">Water Activity</div></div>
+    <div class="metric-card" id="mc2"><div class="metric-val" id="mcBrix">—</div><div class="metric-lbl">Approx. Brix</div></div>
+    <div class="metric-card" id="mc3"><div class="metric-val" id="mcMoisture">—</div><div class="metric-lbl">Moisture %</div></div>
+  </div>
+
+  <div class="altitude-card" id="altCard" style="display:none">
+    <div class="alt-icon">🏔️</div>
+    <div class="alt-body">
+      <h3>Altitude Correction Active</h3>
+      <p id="altCardText"></p>
+    </div>
+    <div class="alt-correction" id="altCorrectionVal"></div>
+  </div>
+
+  <div class="card" id="resultCard">
+    <div class="result-header">
+      <div>
+        <div class="stage-title" id="stageName">Enter a temperature to begin</div>
+        <div class="temp-range-tag" id="stageRangeTag"></div>
+        <div id="safetyBadge"></div>
+      </div>
+      <div class="stage-number" id="stageNumber" style="border-color:var(--border);color:var(--ink3);">—</div>
+    </div>
+    <div class="result-grid">
+      <div class="info-block"><span class="ibl">Cold Water Test</span><p id="waterTest" class="placeholder">Drag the slider to begin.</p></div>
+      <div class="info-block"><span class="ibl">Texture Description</span><p id="texture" class="placeholder">—</p></div>
+      <div class="info-block"><span class="ibl">Sugar Concentration</span><p id="sugarConc" class="placeholder">—</p></div>
+      <div class="info-block"><span class="ibl">Shelf Life Implication</span><p id="shelfLife" class="placeholder">—</p></div>
+      <div class="chem-grid" id="chemGrid"></div>
+      <div class="full-block"><span class="ibl">Confections Made at This Stage</span><div class="products-list" id="productsList"><span class="placeholder">—</span></div></div>
+      <div class="full-block"><span class="ibl">Process Science Note</span><p id="processSci" class="placeholder">—</p></div>
+    </div>
+  </div>
+
+  <div class="tips-grid">
+    <div class="tip-card"><div class="tip-icon">🌡️</div><div class="tip-title">Temperature Control</div><div class="tip-text" id="tipTemp">Enter a temperature to see process notes.</div></div>
+    <div class="tip-card"><div class="tip-icon">💧</div><div class="tip-title">Moisture & Brix</div><div class="tip-text" id="tipMoisture">—</div></div>
+    <div class="tip-card"><div class="tip-icon">⚠️</div><div class="tip-title">Common Defects</div><div class="tip-text" id="tipDefects">—</div></div>
+    <div class="tip-card"><div class="tip-icon">🏭</div><div class="tip-title">Industrial Note</div><div class="tip-text" id="tipIndustrial">—</div></div>
+  </div>
+
+  <div class="footer">
+    Built by <strong>Tanisha Dorairajan</strong> · B.Tech Food Technology, Anna University, Chennai<br>
+    Reference values based on standard confectionery science literature.<br>
+    Altitude correction: −0.5°C per 150 m above sea level. Always verify with a calibrated thermometer.
+  </div>
+</div>
+
+<script>
+const STAGES=[
+  {name:"Thread",num:"Stage 1",minC:102,maxC:112,color:"#4f8ef7",aW:0.85,brix:80,moisture:20,safety:"safe",safetyText:"Safe working temperature",range:"102–112°C  /  215–234°F",waterTest:"Syrup drips off spoon forming thin, fragile threads that break easily when pulled between fingers.",texture:"Thin, freely flowing syrup. Does not hold any shape. Threads are fragile and non-elastic.",sugarConc:"~80% sucrose dissolved in ~20% water. Fully dissolved but not yet supersaturated on cooling.",shelfLife:"aW ~0.85 — relatively high. Supports microbial growth. Requires refrigeration or preservatives for stability beyond a few days.",chemistry:[{title:"Boiling Point Elevation",text:"Dissolved sucrose raises the boiling point above 100°C. Each ~1% increase in sucrose raises boiling point by ~0.5°C — the physical basis of the entire stage system."},{title:"Inversion",text:"Acid (cream of tartar or lemon juice) hydrolyses sucrose into glucose + fructose (invert sugar). Invert sugar reduces crystallisation tendency in downstream products."},{title:"Pan Hygiene",text:"Sugar crystals on pan sides act as nucleation sites. Brushing sides with a wet pastry brush or covering the pan dissolves these crystals with steam — preventing premature graining."}],products:["Simple syrups","Glazes","Fruit preserves","Poaching liquids","Snow cone syrups"],processSci:"Entry stage of sugar concentration. The Clausius-Clapeyron relationship governs boiling point elevation. Invert sugar additions at this stage help control final crystal structure in downstream products.",tipTemp:"Calibrate your thermometer here — immerse in boiling water and confirm 100°C. A 2°C error compounds at higher stages and causes defects that cannot be corrected.",tipMoisture:"Brix ~80. Use a refractometer to verify. Do not stir once boiling — agitation introduces nucleation sites triggering premature crystallisation.",tipDefects:"Crystallisation from undissolved sugar on pan sides. Brush sides with wet pastry brush or cover briefly with lid to dissolve crystals with condensed steam.",tipIndustrial:"Commercially, syrups are filtered through diatomaceous earth after cooking. Brix standardised by inline refractometer before use in downstream processes."},
+  {name:"Soft Ball",num:"Stage 2",minC:112,maxC:116,color:"#9b6ef5",aW:0.75,brix:85,moisture:15,safety:"safe",safetyText:"Safe working temperature",range:"112–116°C  /  234–241°F",waterTest:"Drop in cold water forms a soft, pliable ball that flattens immediately when removed and pressed between fingers.",texture:"Smooth, plastic, moldable mass. Will not hold shape at room temperature — flows slowly. Feels like soft modelling clay.",sugarConc:"~85% sucrose. Approaching supersaturation on cooling — the critical zone for fondant crystal nucleation.",shelfLife:"aW ~0.75 — moulds and some yeasts can still grow. Shelf stable 1–2 weeks at ambient with proper packaging.",chemistry:[{title:"Supersaturation",text:"On cooling below ~50°C, solution becomes supersaturated. Controlled agitation at exactly the right moment triggers mass nucleation of fine crystals — the basis of fondant manufacture."},{title:"Crystal Size Control",text:"Rapid working on a cold marble slab produces thousands of tiny simultaneous nucleation events, giving crystals <20μm — the origin of fondant's characteristic smooth mouthfeel."},{title:"Invert Sugar Role",text:"Higher invert sugar (glucose + fructose) inhibits sucrose recrystallisation, producing softer products. Controls shelf life, bloom resistance, and texture over time."}],products:["Fudge","Fondant","Pralines","Soft caramels","Penuche","Opera creams"],processSci:"The soft ball stage exploits controlled supersaturation. The syrup is intentionally supercooled then mechanically worked to trigger simultaneous crystal nucleation, producing crystals <20μm for smooth texture. Industrial fondant uses vacuum beaters that simultaneously cool and aerate.",tipTemp:"Target for fondant: 114–115°C. ±1°C deviation significantly changes crystal size and final texture. Digital thermometer with 0.1°C resolution is ideal.",tipMoisture:"Brix ~85. Cool on a wet marble slab immediately. Cooling too slowly before working allows large crystals to form — resulting in grainy texture.",tipDefects:"Grainy fudge or fondant: premature working (too hot) or slow cooling causes large crystals. Oily separation in caramels: fat not emulsified — ensure continuous stirring and lecithin present.",tipIndustrial:"Industrial fondant uses vacuum beaters for simultaneous cooling and aeration. Invert sugar concentration precisely controlled to achieve target shelf life and texture stability."},
+  {name:"Firm Ball",num:"Stage 3",minC:116,maxC:121,color:"#a78bfa",aW:0.65,brix:87,moisture:12,safety:"safe",safetyText:"Safe working temperature",range:"116–121°C  /  241–250°F",waterTest:"Ball holds its shape firmly but can be deformed with pressure. Feels like firm putty — pliable but not soft.",texture:"Firm, chewy, holds shape at room temperature. Stretches and pulls. Not sticky if properly formulated.",sugarConc:"~87% sucrose. Maillard reaction begins if milk solids or reducing sugars present — monitor colour development.",shelfLife:"aW ~0.65 — most bacteria inhibited. Moulds may grow slowly. Caramels shelf-stable 2–4 weeks with moisture barrier packaging.",chemistry:[{title:"Maillard Reaction",text:"At ~115°C, reducing sugars react with amino acids from milk to produce hundreds of flavour and colour compounds — the origin of caramel's characteristic brown colour and complex flavour."},{title:"Fat Emulsification",text:"In milk caramels, fat must remain emulsified. Lecithin from milk solids acts as emulsifier. Breaking emulsion causes oily, greasy caramel that separates on cooling."},{title:"Lactose Behaviour",text:"Milk caramels contain lactose (lower solubility than sucrose). Lactose can recrystallise on cooling, producing a desirable 'short' texture in some Scottish-style toffees."}],products:["Milk caramels","Soft toffee","Nougat (soft)","Caramel sauce","Dulce de leche","Gummy bases"],processSci:"Milk caramel is a complex interplay of Maillard reaction, fat emulsification, and sugar concentration. Degree of Maillard browning controlled by temperature, time, milk solids content, and pH. Sodium bicarbonate addition raises pH and accelerates colour development.",tipTemp:"Milk caramels: 116–118°C for soft, 119–121°C for firm. Dairy lowers effective boiling point by ~2°C — adjust target accordingly.",tipMoisture:"Brix ~87. Continuous stirring essential in milk-based caramels to prevent scorching. Heavy-bottomed pan and low-medium heat required.",tipDefects:"Sticky caramel: undercooked. Grainy: lactose crystallisation or excess sucrose. Oily separation: add small amount of warm cream and reheat gently while stirring continuously.",tipIndustrial:"Continuous caramel cookers maintain precise residence time at temperature. Salt, vanilla, and butter dosed at end of cook to preserve volatile flavour compounds."},
+  {name:"Hard Ball",num:"Stage 4",minC:121,maxC:130,color:"#f59e0b",aW:0.50,brix:90,moisture:8,safety:"caution",safetyText:"Hot — handle with care",range:"121–130°C  /  250–266°F",waterTest:"Ball formed in cold water is firm and holds its shape completely. Resists deformation — does not flatten when pressed.",texture:"Rigid, firm ball. Chewy and dense. Slightly sticky surface. Does not melt at room temperature.",sugarConc:"~90% sucrose. Approaching glass transition on cooling — the sugar matrix begins forming amorphous solid structure.",shelfLife:"aW ~0.50 — most pathogens inhibited. Highly hygroscopic. Must be packaged immediately in moisture barrier material.",chemistry:[{title:"Glass Transition",text:"Above 90% sucrose, the syrup begins exhibiting glass-forming behaviour on cooling — shifting from viscous liquid to amorphous solid glass rather than crystallising to give chewy texture."},{title:"Glucose Syrup Role",text:"Glucose syrup (30–40%) interferes with sucrose crystallisation, stabilises the amorphous glass state, and extends chewiness. Essential for consistent nougat and similar products."},{title:"Hygroscopicity",text:"Above 90% sucrose, the mixture actively absorbs moisture from air, causing surface stickiness within minutes. Packaging immediately after cooling is critical in humid climates."}],products:["Rock candy","Divinity","Firm nougat","Marshmallow base","Pecan log roll"],processSci:"The hard ball stage marks the transition into the glass-forming region of sucrose phase behaviour. Glucose syrup (15–30%) is essential to prevent graining — glucose molecules physically obstruct sucrose crystal lattice formation.",tipTemp:"Glucose syrup in formulation lowers effective boiling point — increase target by 1–2°C to compensate. Verify with cold water test as primary confirmation.",tipMoisture:"Brix ~90. Moisture below 10%. Begin packaging operations immediately — even brief humidity exposure causes surface stickiness.",tipDefects:"Surface stickiness: moisture pick-up — store with silica gel sachets. Graining: insufficient glucose syrup — increase glucose:sucrose ratio in formulation.",tipIndustrial:"Nougat production uses vacuum cookers to reduce colour development. Whipped egg albumen or aerated glucose is folded into cooked syrup under controlled temperature and aeration conditions."},
+  {name:"Soft Crack",num:"Stage 5",minC:130,maxC:143,color:"#f97316",aW:0.30,brix:95,moisture:4,safety:"caution",safetyText:"Very hot — burns on contact",range:"130–143°C  /  266–290°F",waterTest:"Threads in cold water are firm and slightly flexible before snapping. Not completely brittle — bend slightly then break cleanly.",texture:"Hard outside, slightly plastic inside at room temperature. Slightly sticky. Pulls apart with a soft snap.",sugarConc:"~95% sucrose. Very close to anhydrous state. Amorphous glass will form on cooling.",shelfLife:"aW ~0.30 — microbiologically stable. Shelf life limited by moisture pick-up and packaging integrity.",chemistry:[{title:"Amorphous Glass State",text:"At 95%+ sucrose, cooled product forms an amorphous glass — sucrose molecules locked in disordered, non-crystalline solid. Gives butterscotch and toffee their characteristic snap and clarity."},{title:"Caramelisation Onset",text:"Non-enzymatic browning begins around 130°C — sucrose starts thermally degrading to produce caramelans, furans, and pyranones responsible for butterscotch flavour notes."},{title:"Acid Addition Timing",text:"Acids (citric, tartaric) for pulled candies are added after cooking during cooling. Adding during cooking causes excessive inversion, changes texture unpredictably."}],products:["Butterscotch","Taffy","Pulled candy","Lollipop base","Saltwater taffy"],processSci:"Primary zone for pulled candy. Pulling at 127–132°C incorporates air, aligns sugar molecules, develops opacity. Degree of pulling determines opacity — more pulls = whiter, more aerated product.",tipTemp:"Work pulled candy quickly — too hot it flows, too cold it snaps. In tropical climates like Chennai, cool the slab slightly more to compensate for ambient humidity during working.",tipMoisture:"Brix ~95. Moisture below 5%. Extreme hygroscopicity — wrap product immediately after forming. High humidity (monsoon season) can cause surface graining within minutes.",tipDefects:"Graining in toffee: insufficient invert sugar or glucose. Sticky product: cook to higher end of range (140–143°C). Colour too dark: heat too high or cook time too long.",tipIndustrial:"Industrial taffy uses batch pullers or rope-forming lines. Acid and flavour injected post-cook. Packaging must be hermetically sealed — wax paper inner wrap standard to prevent moisture transmission."},
+  {name:"Hard Crack",num:"Stage 6",minC:143,maxC:155,color:"#ef4444",aW:0.10,brix:99,moisture:1.5,safety:"caution",safetyText:"Extreme heat — severe burn risk",range:"143–155°C  /  290–311°F",waterTest:"Threads snap completely cleanly with zero bending. Rigid and glassy. Produce a sharp cracking sound when bent.",texture:"Completely brittle and glassy. Snaps cleanly with a sharp crack. Non-sticky when properly dried and stored. Crystal clear when pure.",sugarConc:"~99% sucrose. Essentially anhydrous. The sugar glass is at its clearest and most brittle state.",shelfLife:"aW ~0.10 — completely microbiologically stable. Shelf life determined by packaging protection from humidity — causes graining and cloudiness.",chemistry:[{title:"Anhydrous Glass",text:"Water is virtually absent. Sucrose forms a perfect amorphous glass on cooling — the clear, brittle structure of boiled sweets. Glass transition temperature (Tg) of pure sucrose is ~62°C."},{title:"Colour Development",text:"143–148°C: candy remains water-white clear. Above 150°C, early caramelisation produces slight yellow tint. Glucose syrup addition (30–40%) keeps product clearer and extends glass stability."},{title:"Flavour Incorporation",text:"Acid and flavour added after removing from heat during cooling at ~120°C. Adding to the boiled mass at 150°C causes immediate volatilisation of all flavour compounds."}],products:["Hard candy","Boiled sweets","Lollipops","Barley sugar","Cough drops","Rock","Spun sugar","Pulled sugar showpieces"],processSci:"Hard crack is the primary stage for hard candy — directly relevant to Zubi Candy production. Transparency determined by: purity of sugar, glucose syrup ratio (30–40%), temperature uniformity, and cooling rate. Rapid cooling on cold slab preserves amorphous glass state and prevents graining.",tipTemp:"Temperature uniformity across the batch is critical. Hot spots above 155°C cause localised caramelisation — visible brown streaks in clear candy. Pour immediately — working time is very short.",tipMoisture:"Brix ~99+. Moisture <2%. In humid conditions (monsoon, Chennai coast), moisture absorption begins within seconds of exposure. Pre-warm moulds to prevent condensation.",tipDefects:"Cloudy candy: moisture contamination, insufficient glucose, or temperature too low. Sticky: moisture >2% — extend cook by 1–2°C. Brown streaks: hot spots in pan or temperature too high.",tipIndustrial:"Industrial hard candy uses continuous cookers, cooling drums, and batch rollers. Acid and flavour added at cooling drum exit (~120°C). Industrial wrapping speeds: 600–1200 pieces/minute."},
+  {name:"Caramelisation",num:"Stage 7",minC:155,maxC:177,color:"#b45309",aW:0.05,brix:null,moisture:0.5,safety:"danger",safetyText:"⚠ Danger — severe burn & fire risk",range:"155–177°C  /  311–351°F",waterTest:"Syrup is deep amber to dark brown. Threads snap but colour is unmistakeable. Strong caramel aroma present.",texture:"Brittle with intense complex flavour — bitter, sweet, nutty, and slightly burnt notes. Very hard and glassy on cooling.",sugarConc:"Sucrose decomposing — pyrolysis converting sucrose into caramelans, caramelens, and caramelins (complex polymers).",shelfLife:"aW ~0.05 — completely microbiologically stable. Caramel colouring shelf stable 2+ years in sealed containers.",chemistry:[{title:"Pyrolysis Reactions",text:"Above 155°C, sucrose undergoes pyrolysis — thermal decomposition into >100 volatile and non-volatile compounds including furans, pyranones, maltol, and diacetyl producing complex caramel flavour."},{title:"Caramel Colour Classes",text:"FSSAI and Codex Alimentarius define 4 caramel colour classes (I–IV) based on reactants. Class I (plain caramel, produced here) uses only heat. Classes II–IV use ammonium or sulphite compounds."},{title:"Flavour Compounds",text:"Key compounds: diacetyl (buttery), maltol (sweet/toasty), furaneol (caramel), 4-methylimidazole (bitter, regulated in Class III/IV). Each degree of temperature shifts the flavour balance."}],products:["Caramel sauce","Caramel colouring (Class I)","Praline","Nut brittles","Crème brûlée","Dark caramel toffee"],processSci:"Caramelisation is purely thermal degradation of sugars — unlike Maillard (which requires amino acids). Reaction rate doubles every ~10°C. Industrial caramel colour production tightly controlled to FSSAI and Codex Alimentarius standards.",tipTemp:"155–160°C: light, honey-like notes. 165–170°C: classic deep caramel. Above 175°C: bitterness dominates. Every degree changes the flavour profile significantly.",tipMoisture:"Water essentially absent. Very small amounts of added water cause violent spattering at this temperature — extreme caution. Use cream added off the heat to make sauces.",tipDefects:"Uneven colour from hot spots — swirl pan, do not stir. Bitterness: cooked past 170°C. Solidification in pan: add hot cream off heat to deglaze, whisk carefully.",tipIndustrial:"Industrial caramel colouring manufactured in pressure vessels with precise temperature, time, and pH control. Heavily regulated under FSSAI Food Safety Standards — used in cola beverages, sauces, bakery."},
+  {name:"Carbon / Burnt",num:"Stage 8",minC:177,maxC:250,color:"#450a0a",aW:0.0,brix:null,moisture:0,safety:"danger",safetyText:"⚠ Fire hazard — remove from heat immediately",range:"177°C+  /  351°F+",waterTest:"Black, acrid smoke. Do NOT taste or test — remove from heat immediately.",texture:"Black, hard, completely burnt. Acrid smell. Not food-safe — discard entirely.",sugarConc:"Complete carbonisation — all organic matter decomposing. Carbon residues, tar-like polymers, and toxic aldehydes forming.",shelfLife:"Not applicable — product is not food-safe under any circumstances.",chemistry:[{title:"Carbonisation",text:"Above 177°C, pyrolysis products decompose. Carbon–carbon bonds break down. Black carbon particles form. Acrolein and other toxic aldehydes produced — harmful to inhale."},{title:"Fire Risk",text:"Carbonised sugar is a fuel source. Burning sugar is a serious fire hazard in production environments. Remove from heat, do not add water to flaming sugar — use a fire blanket or CO₂ extinguisher."},{title:"Equipment Damage",text:"Carbon bonds to metal at high temperature. Requires soaking in hot water + sodium hydroxide solution for removal. Severely burnt pans may be permanently stained."}],products:["❌ No edible applications — discard immediately"],processSci:"Carbonisation represents complete degradation of the sugar matrix. In industrial production, temperatures exceeding 177°C trigger automatic process shutdown and alarms. Prevention through continuous temperature monitoring is standard HACCP practice.",tipTemp:"Remove from heat immediately. Do not attempt to save the batch. Place pan in sink away from water if smoking. Allow to cool completely before cleaning.",tipMoisture:"All water driven off. Never add water to a smoking or flaming sugar pan — violent steam explosion risk. Use a fire blanket or Class K extinguisher.",tipDefects:"This IS the defect. Root cause: thermometer failure, unattended cooking, or heat too high. Prevention: never leave boiling sugar unattended above 150°C.",tipIndustrial:"Industrial lines have multiple redundant temperature sensors and automatic cut-off switches. Regular thermometer calibration logs are maintained as mandatory HACCP documentation."}
+];
+
+let unit='C', currentTempC=100, altitudeM=0;
+const altCorrection=m=>-(m/150)*0.5;
+const toC=v=>unit==='C'?v:(v-32)*5/9;
+const toDisplay=c=>unit==='C'?Math.round(c):Math.round(c*9/5+32);
+
+function setUnit(u){
+  unit=u;
+  document.getElementById('btnC').classList.toggle('active',u==='C');
+  document.getElementById('btnF').classList.toggle('active',u==='F');
+  document.getElementById('unitLabel').textContent='°'+u;
+  const sl=document.getElementById('tempSlider');
+  sl.min=toDisplay(100); sl.max=toDisplay(185);
+  document.getElementById('rangeMin').textContent=toDisplay(100)+'°'+u;
+  document.getElementById('rangeMax').textContent=toDisplay(185)+'°'+u;
+  sl.value=toDisplay(currentTempC);
+  document.getElementById('tempValue').textContent=toDisplay(currentTempC);
+  document.getElementById('manualInput').placeholder='e.g. '+toDisplay(120);
+  render(currentTempC);
+}
+function onSlider(v){currentTempC=Math.round(toC(parseFloat(v)));document.getElementById('tempValue').textContent=v;render(currentTempC);}
+function onManual(v){if(!v)return;currentTempC=Math.round(toC(parseFloat(v)));document.getElementById('tempValue').textContent=v;const sl=document.getElementById('tempSlider');if(parseFloat(v)>=sl.min&&parseFloat(v)<=sl.max)sl.value=v;render(currentTempC);}
+function onAltitude(v){
+  altitudeM=Math.max(0,parseFloat(v)||0);
+  const corr=altCorrection(altitudeM);
+  const note=document.getElementById('altNote');
+  if(altitudeM===0){note.textContent='Sea level — no correction needed';document.getElementById('altCard').style.display='none';}
+  else{
+    note.textContent=`Correction: ${corr.toFixed(1)}°C applied to all stage thresholds`;
+    document.getElementById('altCard').style.display='flex';
+    document.getElementById('altCardText').textContent=`At ${altitudeM}m altitude, water boils at ~${(100+corr).toFixed(1)}°C. Sugar concentrates at proportionally lower temperatures. All stage boundaries are shifted by ${corr.toFixed(1)}°C.`;
+    document.getElementById('altCorrectionVal').textContent=corr.toFixed(1)+'°C';
+  }
+  render(currentTempC);
+}
+function getStage(c){const adj=c-altCorrection(altitudeM);return STAGES.find(s=>adj>=s.minC&&adj<s.maxC)||(adj>=177?STAGES[7]:null);}
+
+// Build strip + pills
+const strip=document.getElementById('stageStrip');
+const pills=document.getElementById('stagePills');
+STAGES.forEach((s,i)=>{
+  const seg=document.createElement('div');seg.className='strip-seg';seg.id='seg'+i;seg.style.background=s.color;strip.appendChild(seg);
+  const pill=document.createElement('div');pill.className='stage-pill';pill.id='pill'+i;pill.textContent=s.name;pills.appendChild(pill);
+});
+
+function render(c){
+  const stage=getStage(c);
+  const cl=document.getElementById('correctedLabel');
+  cl.textContent=altitudeM>0?`(effective ${Math.round(c-altCorrection(altitudeM))}°C at sea level)`:'';
+  STAGES.forEach((_,i)=>{
+    const active=stage&&i===STAGES.indexOf(stage);
+    document.getElementById('seg'+i).classList.toggle('active',active);
+    const pill=document.getElementById('pill'+i);
+    pill.classList.toggle('active',active);
+    if(active){pill.style.background=stage.color;pill.style.borderColor=stage.color;}
+    else{pill.style.background='';pill.style.borderColor='';}
+  });
+  ['mc0','mc1','mc2','mc3'].forEach(id=>document.getElementById(id).classList.remove('highlight'));
+  if(!stage){
+    ['mcStage','mcAw','mcBrix','mcMoisture'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('stageName').textContent='Enter a temperature to begin';
+    document.getElementById('stageRangeTag').textContent='';
+    document.getElementById('safetyBadge').innerHTML='';
+    document.getElementById('stageNumber').textContent='—';
+    document.getElementById('stageNumber').style.borderColor='var(--border)';
+    document.getElementById('stageNumber').style.color='var(--ink3)';
+    document.getElementById('waterTest').textContent='Drag the slider to begin.';
+    ['texture','sugarConc','shelfLife','processSci'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('chemGrid').innerHTML='';
+    document.getElementById('productsList').innerHTML='<span class="placeholder">—</span>';
+    ['tipTemp','tipMoisture','tipDefects','tipIndustrial'].forEach(id=>document.getElementById(id).textContent='Enter a temperature to see notes.');
+    return;
+  }
+  ['mc0','mc1','mc2','mc3'].forEach(id=>document.getElementById(id).classList.add('highlight'));
+  document.getElementById('mcStage').textContent=stage.num.replace('Stage ','S');
+  document.getElementById('mcAw').textContent=stage.aW.toFixed(2);
+  document.getElementById('mcBrix').textContent=stage.brix?stage.brix+'°':'N/A';
+  document.getElementById('mcMoisture').textContent=stage.moisture+'%';
+  document.getElementById('stageName').textContent=stage.name;
+  document.getElementById('stageRangeTag').textContent=stage.range;
+  const cls=stage.safety==='safe'?'safety-safe':stage.safety==='caution'?'safety-warn':'safety-danger';
+  document.getElementById('safetyBadge').innerHTML=`<span class="safety-badge ${cls}">${stage.safetyText}</span>`;
+  const sn=document.getElementById('stageNumber');sn.textContent=stage.num;sn.style.borderColor=stage.color;sn.style.color=stage.color;
+  document.getElementById('waterTest').textContent=stage.waterTest;
+  document.getElementById('texture').textContent=stage.texture;
+  document.getElementById('sugarConc').textContent=stage.sugarConc;
+  document.getElementById('shelfLife').textContent=stage.shelfLife;
+  const cg=document.getElementById('chemGrid');cg.innerHTML='';
+  stage.chemistry.forEach(ch=>{const d=document.createElement('div');d.className='chem-card';d.innerHTML=`<span class="chem-title">${ch.title}</span><p>${ch.text}</p>`;cg.appendChild(d);});
+  const pl=document.getElementById('productsList');pl.innerHTML='';
+  stage.products.forEach(p=>{const t=document.createElement('span');t.className='product-tag';t.textContent=p;pl.appendChild(t);});
+  document.getElementById('processSci').textContent=stage.processSci;
+  document.getElementById('tipTemp').textContent=stage.tipTemp;
+  document.getElementById('tipMoisture').textContent=stage.tipMoisture;
+  document.getElementById('tipDefects').textContent=stage.tipDefects;
+  document.getElementById('tipIndustrial').textContent=stage.tipIndustrial;
+}
+render(100);
+</script>
+</body>
+</html>
