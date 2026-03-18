@@ -1,4 +1,4 @@
-# FoodTech Tools
+# FoodTech Toolkit
 Interactive web tools built from hands-on food technology experience.
 
 ## Sugar Boiling Stage Calculator
